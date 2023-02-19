@@ -11,6 +11,12 @@
 		515106EE299BC5F900D1473E /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 515106ED299BC5F900D1473E /* ViewController.swift */; };
 		515106F0299BC5FA00D1473E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 515106EF299BC5FA00D1473E /* Assets.xcassets */; };
 		515106F3299BC5FA00D1473E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 515106F1299BC5FA00D1473E /* Main.storyboard */; };
+		515106FB299BC67D00D1473E /* LightLeakButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 515106FA299BC67D00D1473E /* LightLeakButton.swift */; };
+		515106FD299BCFEC00D1473E /* CALayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 515106FC299BCFEC00D1473E /* CALayer.swift */; };
+		51510700299CAB9E00D1473E /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 515106FF299CAB9E00D1473E /* SnapKit */; };
+		5151070229A1455A00D1473E /* CGGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5151070129A1455A00D1473E /* CGGeometry.swift */; };
+		5151070529A164E300D1473E /* CAAnimationCallback in Frameworks */ = {isa = PBXBuildFile; productRef = 5151070429A164E300D1473E /* CAAnimationCallback */; };
+		5151070729A2131200D1473E /* HollowingTextLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5151070629A2131200D1473E /* HollowingTextLayer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +26,10 @@
 		515106EF299BC5FA00D1473E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		515106F2299BC5FA00D1473E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		515106F4299BC5FA00D1473E /* LightLeakButton.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LightLeakButton.entitlements; sourceTree = "<group>"; };
+		515106FA299BC67D00D1473E /* LightLeakButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightLeakButton.swift; sourceTree = "<group>"; };
+		515106FC299BCFEC00D1473E /* CALayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CALayer.swift; sourceTree = "<group>"; };
+		5151070129A1455A00D1473E /* CGGeometry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGGeometry.swift; sourceTree = "<group>"; };
+		5151070629A2131200D1473E /* HollowingTextLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HollowingTextLayer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -27,6 +37,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5151070529A164E300D1473E /* CAAnimationCallback in Frameworks */,
+				51510700299CAB9E00D1473E /* SnapKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -54,6 +66,10 @@
 			children = (
 				515106EB299BC5F900D1473E /* AppDelegate.swift */,
 				515106ED299BC5F900D1473E /* ViewController.swift */,
+				515106FA299BC67D00D1473E /* LightLeakButton.swift */,
+				5151070629A2131200D1473E /* HollowingTextLayer.swift */,
+				515106FC299BCFEC00D1473E /* CALayer.swift */,
+				5151070129A1455A00D1473E /* CGGeometry.swift */,
 				515106EF299BC5FA00D1473E /* Assets.xcassets */,
 				515106F1299BC5FA00D1473E /* Main.storyboard */,
 				515106F4299BC5FA00D1473E /* LightLeakButton.entitlements */,
@@ -77,6 +93,10 @@
 			dependencies = (
 			);
 			name = LightLeakButton;
+			packageProductDependencies = (
+				515106FF299CAB9E00D1473E /* SnapKit */,
+				5151070429A164E300D1473E /* CAAnimationCallback */,
+			);
 			productName = LightLeakButton;
 			productReference = 515106E8299BC5F900D1473E /* LightLeakButton.app */;
 			productType = "com.apple.product-type.application";
@@ -105,6 +125,10 @@
 				Base,
 			);
 			mainGroup = 515106DF299BC5F900D1473E;
+			packageReferences = (
+				515106FE299CAB9E00D1473E /* XCRemoteSwiftPackageReference "SnapKit" */,
+				5151070329A164E200D1473E /* XCRemoteSwiftPackageReference "CAAnimationCallback" */,
+			);
 			productRefGroup = 515106E9299BC5F900D1473E /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -132,7 +156,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				515106EE299BC5F900D1473E /* ViewController.swift in Sources */,
+				5151070729A2131200D1473E /* HollowingTextLayer.swift in Sources */,
+				515106FD299BCFEC00D1473E /* CALayer.swift in Sources */,
+				515106FB299BC67D00D1473E /* LightLeakButton.swift in Sources */,
 				515106EC299BC5F900D1473E /* AppDelegate.swift in Sources */,
+				5151070229A1455A00D1473E /* CGGeometry.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -282,6 +310,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = jp.usagimaru.LightLeakButton;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -309,6 +338,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = jp.usagimaru.LightLeakButton;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -339,6 +369,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		515106FE299CAB9E00D1473E /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit";
+			requirement = {
+				branch = develop;
+				kind = branch;
+			};
+		};
+		5151070329A164E200D1473E /* XCRemoteSwiftPackageReference "CAAnimationCallback" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/usagimaru/CAAnimationCallback";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		515106FF299CAB9E00D1473E /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 515106FE299CAB9E00D1473E /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
+		5151070429A164E300D1473E /* CAAnimationCallback */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5151070329A164E200D1473E /* XCRemoteSwiftPackageReference "CAAnimationCallback" */;
+			productName = CAAnimationCallback;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 515106E0299BC5F900D1473E /* Project object */;
 }

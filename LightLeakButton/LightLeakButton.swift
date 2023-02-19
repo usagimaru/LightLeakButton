@@ -383,7 +383,7 @@ class LightLeakButton: NSControl {
 	}}
 	
 	private func showGlowLayers() {
-		CALayer.animate(enabled: true, duration: 0.25) {
+		CALayer.animate(enabled: true, duration: 0.35) {
 			self.glowLayer1.opacity = 1.0
 			self.glowLayer2.opacity = 1.0
 		} completionHandler: {
@@ -392,7 +392,7 @@ class LightLeakButton: NSControl {
 	}
 	
 	private func hideGlowLayers() {
-		CALayer.animate(enabled: true, duration: 0.5) {
+		CALayer.animate(enabled: true, duration: 0.8) {
 			self.glowLayer1.opacity = 0.0
 			self.glowLayer2.opacity = 0.0
 		} completionHandler: {

@@ -145,7 +145,6 @@ class HollowingTextLayer: CATextLayer {
 				return -(font.ascender - font.pointSize)
 			}
 			
-			// I see that the Method #2 is apparently the most vertically centered.
 			let yGap = self.yVisualGap + yGap1 + yGap2
 			ctx.translateBy(x: 0, y: yGap)
 		}

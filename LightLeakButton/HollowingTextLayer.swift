@@ -77,7 +77,7 @@ class HollowingTextLayer: CATextLayer {
 												])
 		let textRect = attStr.boundingRect(with: self.constraintSizeOfFitting, options: [
 			.usesLineFragmentOrigin
-		], context: nil)
+		], context: nil).ceilRect()
 		
 		return textRect
 	}

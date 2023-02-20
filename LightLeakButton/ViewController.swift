@@ -28,8 +28,8 @@ class ViewController: NSViewController {
 		}
 		
 		setupButton(self.button1, title: "BUTTON")
-		setupButton(self.button2, title: "墾田永年私財法")
-		setupButton(self.button3, title: "生類憐れみの令 生類憐れみの令 生類憐れみの令")
+		setupButton(self.button2, title: "ボタン")
+		setupButton(self.button3, title: "御用の方はボタンを押してください")
 	}
 
 	override var representedObject: Any? {

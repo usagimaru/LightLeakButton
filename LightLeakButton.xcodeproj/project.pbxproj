@@ -13,7 +13,6 @@
 		515106F3299BC5FA00D1473E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 515106F1299BC5FA00D1473E /* Main.storyboard */; };
 		515106FB299BC67D00D1473E /* LightLeakButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 515106FA299BC67D00D1473E /* LightLeakButton.swift */; };
 		515106FD299BCFEC00D1473E /* CALayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 515106FC299BCFEC00D1473E /* CALayer.swift */; };
-		51510700299CAB9E00D1473E /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 515106FF299CAB9E00D1473E /* SnapKit */; };
 		5151070229A1455A00D1473E /* CGGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5151070129A1455A00D1473E /* CGGeometry.swift */; };
 		5151070529A164E300D1473E /* CAAnimationCallback in Frameworks */ = {isa = PBXBuildFile; productRef = 5151070429A164E300D1473E /* CAAnimationCallback */; };
 		5151070729A2131200D1473E /* HollowingTextLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5151070629A2131200D1473E /* HollowingTextLayer.swift */; };
@@ -38,7 +37,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				5151070529A164E300D1473E /* CAAnimationCallback in Frameworks */,
-				51510700299CAB9E00D1473E /* SnapKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -94,7 +92,6 @@
 			);
 			name = LightLeakButton;
 			packageProductDependencies = (
-				515106FF299CAB9E00D1473E /* SnapKit */,
 				5151070429A164E300D1473E /* CAAnimationCallback */,
 			);
 			productName = LightLeakButton;
@@ -126,7 +123,6 @@
 			);
 			mainGroup = 515106DF299BC5F900D1473E;
 			packageReferences = (
-				515106FE299CAB9E00D1473E /* XCRemoteSwiftPackageReference "SnapKit" */,
 				5151070329A164E200D1473E /* XCRemoteSwiftPackageReference "CAAnimationCallback" */,
 			);
 			productRefGroup = 515106E9299BC5F900D1473E /* Products */;
@@ -371,14 +367,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		515106FE299CAB9E00D1473E /* XCRemoteSwiftPackageReference "SnapKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SnapKit/SnapKit";
-			requirement = {
-				branch = develop;
-				kind = branch;
-			};
-		};
 		5151070329A164E200D1473E /* XCRemoteSwiftPackageReference "CAAnimationCallback" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/usagimaru/CAAnimationCallback";
@@ -390,11 +378,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		515106FF299CAB9E00D1473E /* SnapKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 515106FE299CAB9E00D1473E /* XCRemoteSwiftPackageReference "SnapKit" */;
-			productName = SnapKit;
-		};
 		5151070429A164E300D1473E /* CAAnimationCallback */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5151070329A164E200D1473E /* XCRemoteSwiftPackageReference "CAAnimationCallback" */;

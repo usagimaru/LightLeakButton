@@ -74,10 +74,14 @@ class LightLeakButton: NSControl {
 	private var innerContentLayer = CALayer()
 	private var labelBackLayer = CALayer()
 	private var labelLayer = HollowingTextLayer()
+	private var surfaceLayer = CAGradientLayer()
+	
 	private var glowLayer1 = CAGradientLayer()
 	private var glowLayer2 = CAGradientLayer()
-	private var glowLayer_highlighted = CAGradientLayer()
 	private var haloLayer = CAGradientLayer()
+	private var haloLayer_highlight = CAGradientLayer()
+	
+	private var highlightLayer = CAGradientLayer()
 	
 	
 	// MARK: -
@@ -98,7 +102,7 @@ class LightLeakButton: NSControl {
 		layout()
 		
 		return NSSize {
-			self.labelLayer.calculateTextBounds().width + self.grooveWidth * 2
+			self.labelLayer.calculateTextBounds().width + self.grooveWidth * 2 + 12
 		} h: {
 			self.labelLayer.calculateTextBounds().height + self.grooveWidth * 2
 		}
@@ -109,7 +113,7 @@ class LightLeakButton: NSControl {
 		self.wantsLayer = true
 		self.layerContentsRedrawPolicy = .duringViewResize
 		
-		self.font = NSFont.systemFont(ofSize: 30, weight: .bold)
+		self.font = NSFont.systemFont(ofSize: 20, weight: .bold)
 		self.alignment = .center
 		
 		CALayer.disableAnimations {
@@ -119,14 +123,13 @@ class LightLeakButton: NSControl {
 			self.mainLayer.addSublayer(self.boundsLayer)
 			self.boundsLayer.addSublayer(self.glowLayer1)
 			self.boundsLayer.addSublayer(self.glowLayer2)
-			self.boundsLayer.addSublayer(self.glowLayer_highlighted)
+			self.boundsLayer.addSublayer(self.highlightLayer)
 			self.boundsLayer.addSublayer(self.innerContentLayer)
 			self.boundsLayer.addSublayer(self.labelBackLayer)
 			self.boundsLayer.addSublayer(self.labelLayer)
+			self.boundsLayer.addSublayer(self.surfaceLayer)
 			self.mainLayer.addSublayer(self.haloLayer)
-			
-			self.glowLayer1.opacity = 0.0
-			self.glowLayer2.opacity = 0.0
+			self.mainLayer.addSublayer(self.haloLayer_highlight)
 			
 			resetTrackingArea()
 #if DEBUG
@@ -142,9 +145,9 @@ class LightLeakButton: NSControl {
 		self.needsDisplay = true
 	}
 	
-	private func setupGradientLoopAnimation(_ type: GradientLoopColorType = .typeA) {
+	private func setupGradientLoopAnimation(_ type: GradientLoopColorType = .typeA, to layer: CAGradientLayer) {
 		if !self.isGradientLoopAnimating {
-			self.glowLayer1.removeAnimation(forKey: "gradientLoop")
+			layer.removeAnimation(forKey: "gradientLoop")
 			return
 		}
 		
@@ -156,37 +159,14 @@ class LightLeakButton: NSControl {
 		gradientAnim.toValue = type.nextType().gradientColors()
 		
 		gradientAnim.completionHandler { [weak self] anim, flag in
-			self?.setupGradientLoopAnimation(type.nextType())
+			self?.setupGradientLoopAnimation(type.nextType(), to: layer)
 		}
 		
-		self.glowLayer1.add(gradientAnim, forKey: "gradientLoop")
+		layer.add(gradientAnim, forKey: "gradientLoop")
 	}
 	
 	
 	// MARK: -
-	
-	private func updateGradientLayer(_ layer: CAGradientLayer, animate: Bool, blendMode: CGBlendMode = .normal) {
-		layer.type = .radial
-		layer.startPoint = NSPoint(x: 0.5, y: 0.5)
-		layer.endPoint = NSPoint(x: 1.0, y: 1.0)
-		layer.colors = GradientLoopColorType.typeA.gradientColors()
-		
-		if !self.isGradientLoopAnimating && animate {
-			self.isGradientLoopAnimating = true
-			setupGradientLoopAnimation()
-		}
-		
-//		// 1 Normal, 1.25x width, 0.75x height
-//		NSColor(deviceHue: 0.825, saturation: 0.85, brightness: 1.0, alpha: 1)
-//		NSColor(deviceHue: 0.75, saturation: 0.90, brightness: 1.0, alpha: 1)
-//		NSColor(deviceHue: 0.55, saturation: 0.93, brightness: 1.0, alpha: 1)
-//
-//		// 2 Color Dodge, 1.25x width, 0.75x height
-//		NSColor(deviceHue: 0.70, saturation: 0.46, brightness: 1.0, alpha: 1)
-//
-//		// 3 Hard Light, 4x width, 2.4x height
-//		NSColor(deviceHue: 0.53, saturation: 0.44, brightness: 0.98, alpha: 1)
-	}
 	
 	private func updateTextLabelLayer() {
 		self.labelLayer.string = self.stringValue
@@ -197,13 +177,13 @@ class LightLeakButton: NSControl {
 	}
 	
 	override func updateLayer() {
+		let backingScale = self.window?.backingScaleFactor ?? 1.0
+		
 		CALayer.disableAnimations {
-			//self.innerContentLayer.backgroundColor = NSColor.darkGray.cgColor
-			//self.labelBackLayer.backgroundColor = NSColor.darkGray.cgColor
 			self.boundsLayer.backgroundColor = NSColor.black.cgColor
 			
 			// Text Layer
-			self.labelLayer.contentsScale = self.window?.backingScaleFactor ?? 1.0
+			self.labelLayer.contentsScale = backingScale
 			self.labelLayer.foregroundColor = nil
 			self.labelLayer.isWrapped = false
 			self.labelLayer.masksToBounds = true
@@ -212,54 +192,94 @@ class LightLeakButton: NSControl {
 			self.labelLayer.backgroundDrawing = nil
 			updateTextLabelLayer()
 			
-//			self.labelLayer.setBorderColor(NSColor.green.cgColor)
+			// Button Surface
+			self.surfaceLayer.contentsScale = backingScale
+			self.surfaceLayer.type = .axial
+			self.surfaceLayer.startPoint = NSPoint(0.5, 0.9)
+			self.surfaceLayer.endPoint = NSPoint(0.5, 0.2)
+			self.surfaceLayer.colors = [
+				NSColor.white.withAlphaComponent(0.02).cgColor,
+				NSColor.black.withAlphaComponent(0).cgColor,
+			]
 			
 			// Glow Layer 1 (animating)
+			self.glowLayer1.contentsScale = backingScale
 			self.glowLayer1.type = .radial
 			self.glowLayer1.startPoint = NSPoint(0.5, 0.5)
-			self.glowLayer1.endPoint = NSPoint(1.0, 1.0)
+			self.glowLayer1.endPoint = NSPoint(1, 1)
 			self.glowLayer1.colors = GradientLoopColorType.typeA.gradientColors()
 			self.glowLayer1.compositingFilter = "normalBlendMode"
 			
 			// Glow Layer 2
+			self.glowLayer2.contentsScale = backingScale
 			self.glowLayer2.type = .radial
 			self.glowLayer2.startPoint = NSPoint(0.5, 0.5)
-			self.glowLayer2.endPoint = NSPoint(1.0, 1.0)
-			let color2_1 = NSColor(deviceHue: 0.70, saturation: 0.46, brightness: 1.0, alpha: 1)
+			self.glowLayer2.endPoint = NSPoint(1, 1)
+			let glowColor2 = NSColor(deviceHue: 0.70, saturation: 0.46, brightness: 1.0, alpha: 1)
 			self.glowLayer2.colors = [
-				color2_1.cgColor,
-				color2_1.withAlphaComponent(0).cgColor,
+				glowColor2.cgColor,
+				glowColor2.withAlphaComponent(0).cgColor,
 			]
 			self.glowLayer2.compositingFilter = "colorDodgeBlendMode"
 			
-			// Glow Layer 3
-			self.glowLayer_highlighted.type = .radial
-			self.glowLayer_highlighted.startPoint = NSPoint(0.5, 0.5)
-			self.glowLayer_highlighted.endPoint = NSPoint(1.0, 1.0)
-			let color3_1 = NSColor(deviceHue: 0.53, saturation: 0.44, brightness: 0.98, alpha: 1)
-			self.glowLayer_highlighted.colors = [
-				color3_1.cgColor,
-				color3_1.withAlphaComponent(0).cgColor,
+			// Highlight Layer
+			self.highlightLayer.contentsScale = backingScale
+			self.highlightLayer.type = .radial
+			self.highlightLayer.startPoint = NSPoint(0.5, 0.5)
+			self.highlightLayer.endPoint = NSPoint(1, 1)
+			let HLColor = NSColor(deviceHue: 0.53, saturation: 0.44, brightness: 0.98, alpha: 1)
+			self.highlightLayer.colors = [
+				HLColor.cgColor,
+				HLColor.withAlphaComponent(0).cgColor,
 			]
-			self.glowLayer_highlighted.compositingFilter = "hardLightBlendMode"
+			self.highlightLayer.compositingFilter = "hardLightBlendMode"
+			
+			// Halo Layer
+			self.haloLayer.contentsScale = backingScale
+			self.haloLayer.type = .radial
+			self.haloLayer.startPoint = NSPoint(0.5, 0.5)
+			self.haloLayer.endPoint = NSPoint(1, 1)
+			self.haloLayer.colors = GradientLoopColorType.typeA.gradientColors()
+			self.haloLayer.compositingFilter = "screenBlendMode"
+			
+			// Halo Layer (highlight)
+			self.haloLayer_highlight.contentsScale = backingScale
+			self.haloLayer_highlight.type = .radial
+			self.haloLayer_highlight.startPoint = NSPoint(0.5, 0.5)
+			self.haloLayer_highlight.endPoint = NSPoint(1, 1)
+			self.haloLayer_highlight.colors = [
+				HLColor.cgColor,
+				HLColor.withAlphaComponent(0).cgColor,
+			]
+			self.haloLayer_highlight.compositingFilter = "screenBlendMode"
+		}
+		
+		if !self.isHovered {
+			self.glowLayer1.opacity = 0.0
+			self.glowLayer2.opacity = 0.0
+			self.haloLayer.opacity = 0.0
+			self.haloLayer_highlight.opacity = 0.0
 		}
 		
 		// クリック時の見た目とアニメーション
 		if self.isHighlighted {
 			CALayer.animate(enabled: true, duration: 0.08) {
-				self.glowLayer_highlighted.opacity = 1.0
+				self.highlightLayer.opacity = 1.0
+				self.haloLayer_highlight.opacity = 0.09
 			}
 		}
 		else {
 			CALayer.animate(enabled: true, duration: 0.75) {
-				self.glowLayer_highlighted.opacity = 0.0
+				self.highlightLayer.opacity = 0.0
+				self.haloLayer_highlight.opacity = 0.0
 			}
 		}
 		
 		// ループアニメーション
 		if !self.isGradientLoopAnimating {
 			self.isGradientLoopAnimating = true
-			setupGradientLoopAnimation()
+			setupGradientLoopAnimation(to: self.glowLayer1)
+			setupGradientLoopAnimation(to: self.haloLayer)
 		}
 	}
 	
@@ -292,18 +312,82 @@ class LightLeakButton: NSControl {
 			self.labelLayer.setCornerRadius(innerRadius)
 			
 			
-			// 1 1.25x width, 0.75x height
-			let glowFrame = self.bounds.insetBy(dx: self.bounds.width - self.bounds.width * 1.25,
-												 dy: self.bounds.width * 0.75 - self.bounds.width)
-			self.glowLayer1.frame = glowFrame
+			self.surfaceLayer.frame = self.innerContentLayer.frame
 			
-			// 2 1.25x width, 0.75x height
-			self.glowLayer2.frame = glowFrame
 			
-			// 3 4x width, 2.4x height
-			let glowHighlightedFrame = self.bounds.insetBy(dx: self.bounds.width - self.bounds.width * 4.0,
-														   dy: self.bounds.width - self.bounds.width * 2.4)
-			self.glowLayer_highlighted.frame = glowHighlightedFrame
+			// Glow 1: 1.25x width, 0.75x height
+			self.glowLayer1.frame = effectLayerFrame(widthScale: 1.25, heightScale: 0.75)
+			
+			// Glow 2: 1.25x width, 0.75x height
+			self.glowLayer2.frame = self.glowLayer1.frame
+			
+			// Highlight 3: 4x width, 2.4x height
+			self.highlightLayer.frame = effectLayerFrame(widthScale: 4.0, heightScale: 2.4)
+			
+			// Halo
+			self.haloLayer.frame = effectLayerFrame(widthScale: 1.5, heightScale: 0.7)
+			
+			// Halo (highlight)
+			self.haloLayer_highlight.frame = effectLayerFrame(widthScale: 1.5, heightScale: 0.7)
+		}
+	}
+	
+	private func effectLayerFrame(widthScale: CGFloat = 1.0, heightScale: CGFloat = 1.0) -> CGRect {
+		// Calculate the circumscribed regular circle and then multiply it by the vertical and horizontal scales.
+		
+		let width = self.bounds.size.maxElement()
+		var layerFrame = CGRect(0, 0, width * widthScale, width * heightScale)
+		
+		// Center
+		layerFrame.editX { rect in
+			(self.bounds.width - rect.width) / 2
+		}
+		layerFrame.editY { rect in
+			(self.bounds.height - rect.height) / 2
+		}
+		
+		return layerFrame
+	}
+	
+	private var isHovered: Bool = false { didSet {
+		if isHovered {
+			showGlowLayers()
+		}
+		else {
+			hideGlowLayers()
+		}
+	}}
+	
+	private func showGlowLayers() {
+		CALayer.animate(enabled: true, duration: 0.35) {
+			self.glowLayer1.opacity = 1.0
+			self.glowLayer2.opacity = 1.0
+			self.haloLayer.opacity = self.isHighlighted ? 0.0 : 0.09
+		}
+	}
+	
+	private func hideGlowLayers() {
+		CALayer.animate(enabled: true, duration: 0.8) {
+			self.glowLayer1.opacity = 0.0
+			self.glowLayer2.opacity = 0.0
+			self.haloLayer.opacity = 0.0
+		}
+	}
+	
+	private func updateMouseLocation() {
+		guard let mouseLocationInView = mouseLocationInView()
+		else {
+			self.isHovered = false
+			return
+		}
+		
+		self.isHovered = self.bounds.contains(mouseLocationInView)
+		
+		// Update layer position to mouse location
+		CALayer.disableAnimations {
+			self.glowLayer1.position = mouseLocationInView
+			self.glowLayer2.position = mouseLocationInView
+			self.highlightLayer.position = mouseLocationInView
 		}
 	}
 	
@@ -311,20 +395,7 @@ class LightLeakButton: NSControl {
 	// MARK: - Tracking Area
 	
 	private var trackingArea: NSTrackingArea?
-	
-//	override func updateTrackingAreas() {
-//		super.updateTrackingAreas()
-//	}
-//
-//	override func viewDidMoveToSuperview() {
-//		resetTrackingArea()
-//	}
-//
-//	override func viewDidEndLiveResize() {
-//		super.viewDidEndLiveResize()
-//		resetTrackingArea()
-//	}
-	
+		
 	private func resetTrackingArea() {
 		if let trackingArea = self.trackingArea {
 			removeTrackingArea(trackingArea)
@@ -363,6 +434,11 @@ class LightLeakButton: NSControl {
 		updateMouseLocation()
 	}
 	
+	override func mouseDragged(with event: NSEvent) {
+		super.mouseDragged(with: event)
+		updateMouseLocation()
+	}
+	
 	override func mouseEntered(with event: NSEvent) {
 		super.mouseEntered(with: event)
 		updateMouseLocation()
@@ -371,47 +447,6 @@ class LightLeakButton: NSControl {
 	override func mouseExited(with event: NSEvent) {
 		super.mouseExited(with: event)
 		updateMouseLocation()
-	}
-	
-	private var isHovered: Bool = false { didSet {
-		if isHovered {
-			showGlowLayers()
-		}
-		else {
-			hideGlowLayers()
-		}
-	}}
-	
-	private func showGlowLayers() {
-		CALayer.animate(enabled: true, duration: 0.35) {
-			self.glowLayer1.opacity = 1.0
-			self.glowLayer2.opacity = 1.0
-		} completionHandler: {
-			
-		}
-	}
-	
-	private func hideGlowLayers() {
-		CALayer.animate(enabled: true, duration: 0.8) {
-			self.glowLayer1.opacity = 0.0
-			self.glowLayer2.opacity = 0.0
-		} completionHandler: {
-			
-		}
-	}
-	
-	private func updateMouseLocation() {
-		guard let mouseLocationInView = mouseLocationInView()
-		else {
-			self.isHovered = false
-			return
-		}
-		
-		self.isHovered = self.bounds.contains(mouseLocationInView)
-		
-		CALayer.disableAnimations {
-			self.glowLayer1.position = mouseLocationInView
-		}
 	}
 	
 }

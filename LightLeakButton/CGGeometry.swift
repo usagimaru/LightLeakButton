@@ -57,6 +57,14 @@ extension CGPoint {
 		// let degree = radian * 180 / CGFloat.pi
 		return radian
 	}
+	
+	func maxElement() -> CGFloat {
+		max(x, y)
+	}
+	
+	func minElement() -> CGFloat {
+		min(x, y)
+	}
 
 	mutating func add(x: CGFloat, y: CGFloat) {
 		self.x += x
@@ -147,6 +155,14 @@ extension CGSize {
 		s.abs()
 		return s
 	}
+	
+	func maxElement() -> CGFloat {
+		max(width, height)
+	}
+	
+	func minElement() -> CGFloat {
+		min(width, height)
+	}
 
 	mutating func add(width: CGFloat, height: CGFloat) {
 		self.width += width
@@ -182,6 +198,17 @@ extension CGSize {
 	mutating func multiply(_ scale: CGFloat) {
 		width *= scale
 		height *= scale
+	}
+	
+	func multiplied(scaleX: CGFloat, scaleY: CGFloat) -> CGSize {
+		var s = self
+		s.multiply(scaleX: scaleX, scaleY: scaleY)
+		return s
+	}
+	
+	mutating func multiply(scaleX: CGFloat, scaleY: CGFloat) {
+		width *= scaleX
+		height *= scaleY
 	}
 
 	func divided(by scale: CGFloat) -> CGSize {

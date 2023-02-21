@@ -4,47 +4,65 @@
 //
 //  Created by usagimaru on 2023/02/14.
 //
+//  Original design by drawsgood
+//  https://rive.app/community/4402-9064-light-leak-button/
+//  https://twitter.com/drawsgood/status/1626638647901491211
 
 import Cocoa
 import CAAnimationCallback
 
 class LightLeakButton: NSControl {
 	
-	/// Title
 	override var stringValue: String { didSet {
-		if self.labelLayer.isTextWrapped() {
-			super.toolTip = stringValue
-		}
-		else {
-			super.toolTip = _toolTip
-		}
+		self.labelLayer.string = stringValue
 		
-		self.needsLayout = true
-		self.needsDisplay = true
+		if !self.prohibitToDisplayAndLayout {
+			self.needsDisplay = true
+		}
+		invalidateIntrinsicContentSize()
 	}}
 	
-	/// Title typeface and size
 	override var font: NSFont? { didSet {
-		self.needsDisplay = true
+		if !self.prohibitToDisplayAndLayout {
+			self.needsDisplay = true
+		}
+		invalidateIntrinsicContentSize()
 	}}
 	
 	/// Title horizontal alignment
 	override var alignment: NSTextAlignment { didSet {
-		self.needsDisplay = true
+		if !self.prohibitToDisplayAndLayout {
+			self.needsDisplay = true
+		}
+		invalidateIntrinsicContentSize()
 	}}
 	
 	/// Title truncation
 	var labelTruncationMode: CATextLayerTruncationMode = .end { didSet {
-		self.needsDisplay = true
+		if !self.prohibitToDisplayAndLayout {
+			self.needsDisplay = true
+		}
+		invalidateIntrinsicContentSize()
 	}}
 	
 	/// Corner radius
 	var cornerRadius: CGFloat = 0 { didSet {
-		self.needsLayout = true
+		if !self.prohibitToDisplayAndLayout {
+			self.needsLayout = true
+		}
+	}}
+	
+	/// Duration for gradient animation
+	var gradientAnimationStepDuration: TimeInterval = 1.7 { didSet {
+		if !self.prohibitToDisplayAndLayout {
+			self.needsDisplay = true
+		}
 	}}
 	
 	override var isHighlighted: Bool { didSet {
-		self.needsDisplay = true
+		if !self.prohibitToDisplayAndLayout {
+			self.needsDisplay = true
+		}
 	}}
 	
 	private var _toolTip: String?
@@ -60,18 +78,24 @@ class LightLeakButton: NSControl {
 		self.layer!
 	}
 	
-	var grooveWidth: CGFloat = 4 { didSet {
-		self.needsLayout = true
-		self.needsDisplay = true
+	var grooveWidth: CGFloat = 1.5 { didSet {
+		if !self.prohibitToDisplayAndLayout {
+			self.needsLayout = true
+			self.needsDisplay = true
+		}
 	}}
 	
-	var backgroundColor: NSColor = .black { didSet {
-		self.needsDisplay = true
+	var backgroundColor: NSColor = NSColor(calibratedWhite: 0.1, alpha: 1) { didSet {
+		if !self.prohibitToDisplayAndLayout {
+			self.needsDisplay = true
+		}
 	}}
 	
+	private var prohibitToDisplayAndLayout: Bool = false
 	private var isGradientLoopAnimating = false
-	private var boundsLayer = CALayer()
-	private var innerContentLayer = CALayer()
+	
+	private var boundsClippingLayer = CALayer()
+	private var innerClippingLayer = CALayer()
 	private var labelBackLayer = CALayer()
 	private var labelLayer = HollowingTextLayer()
 	private var surfaceLayer = CAGradientLayer()
@@ -97,62 +121,75 @@ class LightLeakButton: NSControl {
 	}
 	
 	override var intrinsicContentSize: NSSize {
+		/*
+		 I would like to calculate the intrinsic size of a good fit to the width of the labelLayer,
+		 but it does not work well. 🫤😑
+		 */
+		
 		let superSize = super.intrinsicContentSize
 		
+		updateTextLabelLayer()
 		layout()
 		
+		let horizontalInsets: CGFloat = 20
+		let verticalInsets: CGFloat = 12
+		let textBounds = self.labelLayer.calculateTextBounds()
+		
 		return NSSize {
-			self.labelLayer.calculateTextBounds().width + self.grooveWidth * 2 + 12
+			textBounds.width + self.grooveWidth * 2 + horizontalInsets
 		} h: {
-			self.labelLayer.calculateTextBounds().height + self.grooveWidth * 2
+			if textBounds.height + verticalInsets > superSize.height {
+				return textBounds.height + verticalInsets
+			}
+			return superSize.height
 		}
-
 	}
 	
 	private func _init() {
 		self.wantsLayer = true
-		self.layerContentsRedrawPolicy = .duringViewResize
-		
+		self.layerContentsRedrawPolicy = .onSetNeedsDisplay
+		self.isEnabled = true
 		self.font = NSFont.systemFont(ofSize: 20, weight: .bold)
 		self.alignment = .center
 		
 		CALayer.disableAnimations {
 			self.mainLayer.masksToBounds = false
-			self.boundsLayer.masksToBounds = true
+			self.boundsClippingLayer.masksToBounds = true
+			self.innerClippingLayer.masksToBounds = true
+			self.labelBackLayer.masksToBounds = true
+			self.labelLayer.masksToBounds = true
 			
-			self.mainLayer.addSublayer(self.boundsLayer)
-			self.boundsLayer.addSublayer(self.glowLayer1)
-			self.boundsLayer.addSublayer(self.glowLayer2)
-			self.boundsLayer.addSublayer(self.highlightLayer)
-			self.boundsLayer.addSublayer(self.innerContentLayer)
-			self.boundsLayer.addSublayer(self.labelBackLayer)
-			self.boundsLayer.addSublayer(self.labelLayer)
-			self.boundsLayer.addSublayer(self.surfaceLayer)
+			self.mainLayer.addSublayer(self.boundsClippingLayer)
 			self.mainLayer.addSublayer(self.haloLayer)
 			self.mainLayer.addSublayer(self.haloLayer_highlight)
 			
+			self.boundsClippingLayer.addSublayer(self.glowLayer1)
+			self.boundsClippingLayer.addSublayer(self.glowLayer2)
+			self.boundsClippingLayer.addSublayer(self.highlightLayer)
+			self.boundsClippingLayer.addSublayer(self.innerClippingLayer)
+			
+			self.innerClippingLayer.addSublayer(self.labelBackLayer)
+			self.innerClippingLayer.addSublayer(self.surfaceLayer)
+			self.labelBackLayer.mask = self.labelLayer
+			
 			resetTrackingArea()
-#if DEBUG
-			//self.boundsLayer.setBorderColor(NSColor.gray.cgColor)
-			//self.labelLayer.setBorderColor(NSColor.red.cgColor)
-			//self.glowLayer1.setBorderColor(NSColor.red.cgColor)
-			//self.haloLayer.setBorderColor(NSColor.blue.cgColor)
-			//self.innerContentLayer.setBorderColor(NSColor.purple.cgColor)
-#endif
 		}
 		
 		self.needsLayout = true
 		self.needsDisplay = true
+		invalidateIntrinsicContentSize()
 	}
 	
 	private func setupGradientLoopAnimation(_ type: GradientLoopColorType = .typeA, to layer: CAGradientLayer) {
+		let gradientLoopAnim = "gradientLoop"
+		
 		if !self.isGradientLoopAnimating {
-			layer.removeAnimation(forKey: "gradientLoop")
+			layer.removeAnimation(forKey: gradientLoopAnim)
 			return
 		}
 		
 		let gradientAnim = CABasicAnimation(keyPath: "colors")
-		gradientAnim.duration = 2.5
+		gradientAnim.duration = self.gradientAnimationStepDuration
 		gradientAnim.fillMode = CAMediaTimingFillMode.forwards
 		gradientAnim.isRemovedOnCompletion = false
 		gradientAnim.fromValue = type.gradientColors()
@@ -162,7 +199,7 @@ class LightLeakButton: NSControl {
 			self?.setupGradientLoopAnimation(type.nextType(), to: layer)
 		}
 		
-		layer.add(gradientAnim, forKey: "gradientLoop")
+		layer.add(gradientAnim, forKey: gradientLoopAnim)
 	}
 	
 	
@@ -170,23 +207,24 @@ class LightLeakButton: NSControl {
 	
 	private func updateTextLabelLayer() {
 		self.labelLayer.string = self.stringValue
+		self.labelLayer.isWrapped = false
 		self.labelLayer.font = self.font
 		self.labelLayer.fontSize = self.font?.pointSize ?? 0
 		self.labelLayer.truncationMode = self.labelTruncationMode
 		self.labelLayer.alignmentMode = self.alignment.layerAlignmentMode()
+		self.labelLayer.setNeedsDisplay()
 	}
 	
 	override func updateLayer() {
 		let backingScale = self.window?.backingScaleFactor ?? 1.0
 		
 		CALayer.disableAnimations {
-			self.boundsLayer.backgroundColor = NSColor.black.cgColor
+			self.labelBackLayer.contentsScale = backingScale
+			self.labelBackLayer.backgroundColor = self.backgroundColor.cgColor
 			
 			// Text Layer
 			self.labelLayer.contentsScale = backingScale
 			self.labelLayer.foregroundColor = nil
-			self.labelLayer.isWrapped = false
-			self.labelLayer.masksToBounds = true
 			self.labelLayer.backgroundFillColor = self.backgroundColor.cgColor
 			self.labelLayer.isHollowing = true
 			self.labelLayer.backgroundDrawing = nil
@@ -222,7 +260,7 @@ class LightLeakButton: NSControl {
 			]
 			self.glowLayer2.compositingFilter = "colorDodgeBlendMode"
 			
-			// Highlight Layer
+			// Highlight Layer (when pushing)
 			self.highlightLayer.contentsScale = backingScale
 			self.highlightLayer.type = .radial
 			self.highlightLayer.startPoint = NSPoint(0.5, 0.5)
@@ -234,7 +272,7 @@ class LightLeakButton: NSControl {
 			]
 			self.highlightLayer.compositingFilter = "hardLightBlendMode"
 			
-			// Halo Layer
+			// Halo Layer (animating)
 			self.haloLayer.contentsScale = backingScale
 			self.haloLayer.type = .radial
 			self.haloLayer.startPoint = NSPoint(0.5, 0.5)
@@ -252,6 +290,13 @@ class LightLeakButton: NSControl {
 				HLColor.withAlphaComponent(0).cgColor,
 			]
 			self.haloLayer_highlight.compositingFilter = "screenBlendMode"
+			
+			// Visibility
+			self.glowLayer1.isHidden = !self.isEnabled
+			self.glowLayer2.isHidden = !self.isEnabled
+			self.highlightLayer.isHidden = !self.isEnabled
+			self.haloLayer.isHidden = !self.isEnabled
+			self.haloLayer_highlight.isHidden = !self.isEnabled
 		}
 		
 		if !self.isHovered {
@@ -261,7 +306,7 @@ class LightLeakButton: NSControl {
 			self.haloLayer_highlight.opacity = 0.0
 		}
 		
-		// クリック時の見た目とアニメーション
+		// Visibility and animation on clicking
 		if self.isHighlighted {
 			CALayer.animate(enabled: true, duration: 0.08) {
 				self.highlightLayer.opacity = 1.0
@@ -275,61 +320,79 @@ class LightLeakButton: NSControl {
 			}
 		}
 		
-		// ループアニメーション
-		if !self.isGradientLoopAnimating {
-			self.isGradientLoopAnimating = true
+		if !self.isEnabled {
+			self.boundsClippingLayer.backgroundColor = NSColor.black.withSystemEffect(.disabled).cgColor
+			self.isGradientLoopAnimating = false
 			setupGradientLoopAnimation(to: self.glowLayer1)
 			setupGradientLoopAnimation(to: self.haloLayer)
 		}
+		else {
+			self.boundsClippingLayer.backgroundColor = NSColor.black.cgColor
+			
+			// Gradient loop animations
+			if !self.isGradientLoopAnimating {
+				self.isGradientLoopAnimating = true
+				setupGradientLoopAnimation(to: self.glowLayer1)
+				setupGradientLoopAnimation(to: self.haloLayer)
+			}
+		}
+		
+		self.needsLayout = true
 	}
 	
 	override func layout() {
-		super.layout()
-		
 		CALayer.disableAnimations {
-			self.boundsLayer.frame = self.bounds
-			self.boundsLayer.setCornerRadius(self.cornerRadius)
+			self.boundsClippingLayer.frame = self.bounds
+			self.boundsClippingLayer.setCornerRadius(self.cornerRadius)
 			
-			self.innerContentLayer.frame = self.bounds.insetBy(self.grooveWidth)
-			let innerRadius = (self.cornerRadius > 0) ? self.cornerRadius - self.grooveWidth : 0
-			self.innerContentLayer.setCornerRadius(innerRadius)
+			let innerRadius = (self.cornerRadius > 0) ? max(self.cornerRadius - self.grooveWidth, 0) : 0
+			self.innerClippingLayer.setCornerRadius(innerRadius)
+			self.innerClippingLayer.frame = self.bounds.insetBy(self.grooveWidth)
 			
-			self.labelBackLayer.frame = self.bounds.insetBy(self.grooveWidth)
+			self.labelBackLayer.frame = self.innerClippingLayer.bounds
+			self.labelBackLayer.setCornerRadius(innerRadius)
 			
-			updateTextLabelLayer()
-			let labelFrame = self.innerContentLayer.frame
-			self.labelLayer.constraintSizeOfFitting = labelFrame.size
-			//self.labelLayer.fittingSize()
-			self.labelLayer.size = labelFrame.size
+			self.labelLayer.constraintSizeOfFitting = self.labelBackLayer.frame.size
+			self.labelLayer.display()
+			self.labelLayer.size = self.labelBackLayer.frame.size
 			
 			self.labelLayer.origin = CGPoint(x: {
-				(self.bounds.width - self.labelLayer.bounds.width) / 2
+				(self.innerClippingLayer.frame.width - self.labelLayer.frame.width) / 2
 			},
 											 y: {
-				(self.bounds.height - self.labelLayer.bounds.height) / 2
+				(self.innerClippingLayer.frame.height - self.labelLayer.frame.height) / 2
 			})
 			
-			self.labelLayer.setCornerRadius(innerRadius)
+			self.surfaceLayer.frame = self.innerClippingLayer.frame
 			
 			
-			self.surfaceLayer.frame = self.innerContentLayer.frame
+			// Glow 1
+			// Do not reset the `origin` here, since the `position` is updated according to the mouse pointer.
+			self.glowLayer1.size = effectLayerFrame(widthScale: 1.25, heightScale: 0.75).size
 			
+			// Glow 2
+			self.glowLayer2.size = self.glowLayer1.size
 			
-			// Glow 1: 1.25x width, 0.75x height
-			self.glowLayer1.frame = effectLayerFrame(widthScale: 1.25, heightScale: 0.75)
+			// Glow (highlight)
+			self.highlightLayer.size = effectLayerFrame(widthScale: 4.0, heightScale: 2.4).size
 			
-			// Glow 2: 1.25x width, 0.75x height
-			self.glowLayer2.frame = self.glowLayer1.frame
-			
-			// Highlight 3: 4x width, 2.4x height
-			self.highlightLayer.frame = effectLayerFrame(widthScale: 4.0, heightScale: 2.4)
 			
 			// Halo
+			// The origin is fixed.
 			self.haloLayer.frame = effectLayerFrame(widthScale: 1.5, heightScale: 0.7)
 			
 			// Halo (highlight)
-			self.haloLayer_highlight.frame = effectLayerFrame(widthScale: 1.5, heightScale: 0.7)
+			self.haloLayer_highlight.frame = effectLayerFrame(widthScale: 1.5,  heightScale: 0.7)
 		}
+		
+		if self.labelLayer.isTextWrapped() {
+			super.toolTip = self.stringValue
+		}
+		else {
+			super.toolTip = self._toolTip
+		}
+		
+		super.layout()
 	}
 	
 	private func effectLayerFrame(widthScale: CGFloat = 1.0, heightScale: CGFloat = 1.0) -> CGRect {
@@ -383,7 +446,7 @@ class LightLeakButton: NSControl {
 		
 		self.isHovered = self.bounds.contains(mouseLocationInView)
 		
-		// Update layer position to mouse location
+		// Update the position of these layers according to the mouse pointer.
 		CALayer.disableAnimations {
 			self.glowLayer1.position = mouseLocationInView
 			self.glowLayer2.position = mouseLocationInView
@@ -402,7 +465,7 @@ class LightLeakButton: NSControl {
 		}
 		
 		let options: NSTrackingArea.Options = [
-			.activeInKeyWindow,
+			.activeAlways,
 			.mouseEnteredAndExited,
 			.mouseMoved,
 			.inVisibleRect,
@@ -417,7 +480,12 @@ class LightLeakButton: NSControl {
 	}
 	
 	
-	// MARK: -
+	// MARK: - Events
+	
+	override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+		// Accespts mouse click event when the window is not key window or the app is not active.
+		return true
+	}
 	
 	override func mouseDown(with event: NSEvent) {
 		super.mouseDown(with: event)
@@ -512,13 +580,34 @@ extension NSTextAlignment {
 	
 }
 
+extension CATextLayerTruncationMode {
+	
+	func lineBreakMode() -> NSLineBreakMode {
+		switch self {
+			case .start:
+				return .byTruncatingHead
+				
+			case .middle:
+				return .byTruncatingMiddle
+				
+			case .end:
+				return .byTruncatingTail
+				
+			default:
+				return .byClipping
+				
+		}
+	}
+	
+}
+
 extension NSView {
 	
 	func mouseLocationInView() -> NSPoint? {
 		guard let window = self.window
 		else { return nil }
 		
-		let mouseLocationInWindow = window.mouseLocationOutsideOfEventStream //window.convertPoint(fromScreen: NSEvent.mouseLocation)
+		let mouseLocationInWindow = window.mouseLocationOutsideOfEventStream
 		let mouseLocationInView = convert(mouseLocationInWindow, from: nil)
 		return mouseLocationInView
 	}

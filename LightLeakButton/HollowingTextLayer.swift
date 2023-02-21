@@ -23,28 +23,30 @@ class HollowingTextLayer: CATextLayer {
 	
 	/// Enable hollowing
 	var isHollowing: Bool = true { didSet {
-		self.needsDisplay()
+		setNeedsDisplay()
 	}}
 	
 	/// Adjust for text centering vertically
 	var centeringVerticallyTweaking: Bool = true { didSet {
-		self.needsDisplay()
+		setNeedsDisplay()
 	}}
 	
 	/// Can adjust text align vertically if needed. +0.5 is solving the visually misalignment.
 	var yVisualGap: CGFloat = 0 { didSet {
-		self.needsDisplay()
+		setNeedsDisplay()
 	}}
 	
 	/// Draw backgroud
 	var backgroundDrawing: ((_ ctx: CGContext) -> ())?
 	
 	/// Alternative to `backgroundColor`
-	var backgroundFillColor: CGColor = Color.clear.cgColor
+	var backgroundFillColor: CGColor = Color.clear.cgColor { didSet {
+		setNeedsDisplay()
+	}}
 	
 	/// Limitation of `fittingSize()` calculation
 	var constraintSizeOfFitting: CGSize = .zero
-	
+		
 	override var backgroundColor: CGColor? {
 		get {
 			nil
@@ -56,6 +58,20 @@ class HollowingTextLayer: CATextLayer {
 	
 	
 	// MARK: -
+	
+	override init() {
+		super.init()
+		_init()
+	}
+	
+	required init?(coder: NSCoder) {
+		super.init(coder: coder)
+		_init()
+	}
+	
+	private func _init() {
+		disableSomeImplicitAnimations()
+	}
 	
 	@discardableResult
 	func fittingSize() -> CGSize {
@@ -71,9 +87,14 @@ class HollowingTextLayer: CATextLayer {
 			  let font = self.font
 		else { return .zero }
 		
+		let paragraph = NSMutableParagraphStyle()
+		paragraph.lineBreakMode = self.truncationMode.lineBreakMode()
+		paragraph.alignment = .natural
+		
 		let attStr = NSMutableAttributedString(string: string, attributes:
 												[
 													.font : font,
+													.paragraphStyle : paragraph,
 												])
 		let textRect = attStr.boundingRect(with: self.constraintSizeOfFitting, options: [
 			.usesLineFragmentOrigin
@@ -158,6 +179,14 @@ class HollowingTextLayer: CATextLayer {
 		super.draw(in: ctx)
 		
 		ctx.restoreGState()
+	}
+	
+	private func disableSomeImplicitAnimations() {
+		// Disable animations when `string` updating
+		self.actions = [
+			"contents" : NSNull(),
+			"font" : NSNull(),
+		]
 	}
 	
 }

@@ -706,12 +706,12 @@
         <scene sceneID="hIz-AP-VOD">
             <objects>
                 <viewController id="XfG-lQ-9wD" customClass="ViewController" customModule="LightLeakButton" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" misplaced="YES" id="m2S-Jp-Qdl">
-                        <rect key="frame" x="0.0" y="0.0" width="720" height="320"/>
+                    <view key="view" id="m2S-Jp-Qdl">
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="320"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <stackView distribution="fill" orientation="horizontal" alignment="centerY" spacing="30" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" horizontalHuggingPriority="251" horizontalCompressionResistancePriority="749" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="V4Z-E5-hP8">
-                                <rect key="frame" x="20" y="130" width="680" height="60"/>
+                                <rect key="frame" x="60" y="130" width="680" height="60"/>
                                 <subviews>
                                     <customView translatesAutoresizingMaskIntoConstraints="NO" id="2hT-Az-bdF" customClass="LightLeakButton" customModule="LightLeakButton" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="0.0" width="180" height="60"/>
@@ -757,9 +757,10 @@
                             </stackView>
                         </subviews>
                         <constraints>
-                            <constraint firstAttribute="trailing" secondItem="V4Z-E5-hP8" secondAttribute="trailing" constant="20" id="fs9-t6-hMt"/>
+                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="V4Z-E5-hP8" secondAttribute="trailing" constant="60" id="fs9-t6-hMt"/>
                             <constraint firstItem="V4Z-E5-hP8" firstAttribute="centerY" secondItem="m2S-Jp-Qdl" secondAttribute="centerY" id="ijY-VZ-Gsi"/>
-                            <constraint firstItem="V4Z-E5-hP8" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" id="pk3-hc-3dB"/>
+                            <constraint firstItem="V4Z-E5-hP8" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="60" id="pk3-hc-3dB"/>
+                            <constraint firstItem="V4Z-E5-hP8" firstAttribute="centerX" secondItem="m2S-Jp-Qdl" secondAttribute="centerX" id="yFE-m9-NiG"/>
                         </constraints>
                     </view>
                     <connections>
